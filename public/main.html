@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>I-Navigator — User Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding-top: 62px;
+      background: #07101f;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #d0d8e8;
+      min-height: 100vh;
+    }
+
+    /* ── Background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    #main-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 62px;
+      background: linear-gradient(135deg, #0a1628 0%, #1a2f5a 60%, #0d3b6e 100%);
+      border-bottom: 2px solid #c9a84c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+    }
+
+    .hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hdr-logo {
+      height: 44px;
+      width: 44px;
+      border-radius: 50%;
+      border: 2px solid rgba(201,168,76,0.55);
+      object-fit: contain;
+    }
+
+    .hdr-title-main {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .hdr-title-sub {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #c9a84c;
+      text-transform: uppercase;
+    }
+
+    .hdr-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hdr-user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 20px;
+      padding: 5px 14px 5px 8px;
+    }
+
+    .hdr-avatar {
+      width: 26px; height: 26px;
+      background: #c9a84c;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      color: #0a1628;
+      flex-shrink: 0;
+    }
+
+    .hdr-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e8e8e8;
+    }
+
+    .hdr-user-badge {
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .hdr-user-badge:hover { background: rgba(255,255,255,0.12); }
+
+    .hdr-user-badge.open {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(201,168,76,0.6);
+    }
+
+    .hdr-caret {
+      font-size: 9px;
+      color: #c9a84c;
+      margin-left: 2px;
+      transition: transform 0.2s;
+    }
+
+    .hdr-user-badge.open .hdr-caret { transform: rotate(180deg); }
+
+    .hdr-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 160px;
+      background: #0f1e3d;
+      border: 1px solid rgba(201,168,76,0.35);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 2000;
+      overflow: hidden;
+    }
+
+    .hdr-dropdown.open { display: block; }
+
+    .hdr-drop-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .hdr-drop-item:hover { background: rgba(201,168,76,0.12); color: #fff; }
+
+    .hdr-drop-divider {
+      height: 1px;
+      background: rgba(201,168,76,0.15);
+      margin: 2px 0;
+    }
+
+    .hdr-drop-item.danger { color: #ff8080; }
+    .hdr-drop-item.danger:hover { background: rgba(220,60,60,0.18); color: #ffaaaa; }
+
+    /* ── Page wrapper ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    /* ── Page title bar ── */
+    .page-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .page-titlebar h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #ffffff;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .page-titlebar h2 span {
+      color: #c9a84c;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 7px;
+      padding: 7px 16px;
+      color: #c9a84c;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-nav:hover {
+      background: rgba(201,168,76,0.22);
+      color: #f0cc70;
+    }
+
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(50,180,100,0.14);
+      border: 1px solid rgba(50,180,100,0.4);
+      border-radius: 7px;
+      padding: 7px 16px;
+      color: #6ee898;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-add:hover { background: rgba(50,180,100,0.24); }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 140px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(201,168,76,0.65);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    /* ── Table card ── */
+    .table-card {
+      background: rgba(10, 20, 44, 0.7);
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .table-card table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    .table-card thead tr {
+      background: linear-gradient(90deg, #0d2244, #1a3560);
+      border-bottom: 1px solid rgba(201,168,76,0.3);
+    }
+
+    .table-card thead th {
+      padding: 13px 16px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #c9a84c;
+      white-space: nowrap;
+    }
+
+    .table-card tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.15s;
+    }
+
+    .table-card tbody tr:last-child { border-bottom: none; }
+
+    .table-card tbody tr:hover {
+      background: rgba(201,168,76,0.05);
+    }
+
+    .table-card tbody td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #c8d4e8;
+      vertical-align: middle;
+    }
+
+    .td-id {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      font-weight: 600;
+    }
+
+    .td-name {
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .role-admin {
+      background: rgba(201,168,76,0.18);
+      color: #c9a84c;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+
+    .role-user {
+      background: rgba(100,160,240,0.14);
+      color: #88bbff;
+      border: 1px solid rgba(100,160,240,0.25);
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .action-edit {
+      background: rgba(100,160,240,0.12);
+      border-color: rgba(100,160,240,0.3);
+      color: #88bbff;
+    }
+
+    .action-edit:hover { background: rgba(100,160,240,0.24); }
+
+    .action-delete {
+      background: rgba(220,60,60,0.1);
+      border-color: rgba(220,60,60,0.3);
+      color: #ff8080;
+    }
+
+    .action-delete:hover { background: rgba(220,60,60,0.22); }
+
+    .action-reset {
+      background: rgba(240,180,40,0.1);
+      border-color: rgba(240,180,40,0.3);
+      color: #f0c840;
+    }
+
+    .action-reset:hover { background: rgba(240,180,40,0.22); }
+
+    /* ── Pagination ── */
+    .pagination-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 4px;
+    }
+
+    .pg-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #a0b0c8;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    .pg-btn:hover { background: rgba(201,168,76,0.12); color: #c9a84c; }
+    .pg-btn.active { background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.5); color: #f0cc70; font-weight: 700; }
+    .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Modals ── */
+    .modal-content {
+      background: #0d1e3a !important;
+      border: 1px solid rgba(201,168,76,0.25) !important;
+      border-radius: 12px !important;
+      color: #d0d8e8;
+    }
+
+    .modal-header {
+      background: linear-gradient(90deg, #0d2244, #1a3560) !important;
+      border-bottom: 1px solid rgba(201,168,76,0.25) !important;
+      border-radius: 11px 11px 0 0 !important;
+      padding: 14px 20px !important;
+    }
+
+    .modal-title {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      color: #c9a84c !important;
+    }
+
+    .btn-close {
+      filter: invert(1) brightness(0.7) !important;
+    }
+
+    .modal-body { padding: 20px !important; }
+
+    .modal-body label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: rgba(201,168,76,0.75);
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .modal-body .form-control,
+    .modal-body .form-select {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      border-radius: 7px !important;
+      color: #e8e8e8 !important;
+      font-size: 13px;
+    }
+
+    .modal-body .form-control:focus,
+    .modal-body .form-select:focus {
+      background: rgba(255,255,255,0.08) !important;
+      border-color: rgba(201,168,76,0.5) !important;
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.12) !important;
+      color: #fff !important;
+    }
+
+    .modal-body .form-select option {
+      background: #0d1e3a;
+      color: #e8e8e8;
+    }
+
+    .modal-footer {
+      border-top: 1px solid rgba(255,255,255,0.07) !important;
+      padding: 12px 20px !important;
+      gap: 8px;
+    }
+
+    .btn-modal-save {
+      background: linear-gradient(135deg, #b8922a, #c9a84c) !important;
+      border: none !important;
+      border-radius: 7px !important;
+      color: #0a1628 !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.8px !important;
+      text-transform: uppercase !important;
+      padding: 7px 20px !important;
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      border-radius: 7px !important;
+      color: #a0a0a0 !important;
+      font-size: 12px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      padding: 7px 16px !important;
+    }
+
+    .text-danger { color: #ff8080 !important; font-size: 12px; }
+
+    /* empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: rgba(255,255,255,0.2);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="main-header">
+    <div class="hdr-left">
+      <img src="./upnm.png" alt="Logo" class="hdr-logo">
+      <div>
+        <div class="hdr-title-main">I-Navigator</div>
+        <div class="hdr-title-sub">User Management</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-user-badge" id="hdr-badge" onclick="toggleHdrDropdown(event)">
+        <div class="hdr-avatar" id="admin-avatar">A</div>
+        <span class="hdr-name" id="admin-name">Admin</span>
+        <span class="hdr-caret">&#9660;</span>
+        <div class="hdr-dropdown" id="hdr-dropdown">
+          <div class="hdr-drop-divider"></div>
+          <button class="hdr-drop-item danger" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page -->
+  <div class="page-wrap">
+
+    <div class="page-titlebar">
+      <h2>&#9776; User <span>List</span></h2>
+      <div class="page-actions">
+        <a class="btn-nav" href="/">
+          <i class="fas fa-map"></i> Go to Charts
+        </a>
+        <button class="btn-add" data-bs-toggle="modal" data-bs-target="#userModal">
+          <i class="fas fa-user-plus"></i> Add User
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Admins</div>
+        <div class="stat-value" id="stat-admins">—</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Username</th>
+            <th style="width:260px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body">
+          <tr><td colspan="5" class="empty-state">Loading users...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrap" id="pagination"></div>
+
+  </div>
+
+  <!-- Add User Modal -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" id="userForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Add User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="userId">
+          <div class="mb-3">
+            <label>Full Name</label>
+            <input type="text" id="name" class="form-control" placeholder="Enter full name" required>
+          </div>
+          <div class="mb-3">
+            <label>Role</label>
+            <select id="role" class="form-select">
+              <option>Admin</option>
+              <option>User</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Username</label>
+            <input type="text" id="username" class="form-control" placeholder="Enter username" required>
+          </div>
+          <div class="mb-3">
+            <label>Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-modal-save">Save User</button>
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" id="resetForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="resetUserId">
+          <div class="mb-3">
+            <label>New Password</label>
+            <input type="password" id="newPassword" class="form-control" placeholder="New password" required>
+          </div>
+          <div class="mb-3">
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm password" required>
+          </div>
+          <div id="resetError" class="text-danger mb-2"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-modal-save">Reset Password</button>
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" id="editForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editUserId">
+          <div class="mb-3">
+            <label>Full Name</label>
+            <input type="text" id="editName" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label>Role</label>
+            <select id="editRole" class="form-select" required>
+              <option value="Admin">Admin</option>
+              <option value="User">User</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Username</label>
+            <input type="text" id="editUsername" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-modal-save">Save Changes</button>
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let users = [];
+    const userTable = document.getElementById('user-table-body');
+    const modal = new bootstrap.Modal(document.getElementById('userModal'));
+    const form = document.getElementById('userForm');
+
+    let currentPage = 1;
+    const rowsPerPage = 20;
+
+    async function loadUsers() {
+      fetch('/api/users')
+      .then(res => res.json())
+      .then(data => {
+        users = data.users;
+        updateStats();
+        displayPage(1);
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent = users.length;
+      document.getElementById('stat-admins').textContent = users.filter(u => u.role === 'Admin').length;
+    }
+
+    function displayPage(page) {
+      currentPage = page;
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pagedUsers = users.slice(start, end);
+
+      if (pagedUsers.length === 0) {
+        userTable.innerHTML = '<tr><td colspan="5" class="empty-state">No users found.</td></tr>';
+        renderPagination();
+        return;
+      }
+
+      userTable.innerHTML = pagedUsers.map(u => `
+        <tr>
+          <td class="td-id">${u.id}</td>
+          <td class="td-name">${u.name}</td>
+          <td><span class="role-badge ${u.role === 'Admin' ? 'role-admin' : 'role-user'}">${u.role}</span></td>
+          <td>${u.username}</td>
+          <td>
+            <button class="action-btn action-edit me-1" onclick="editUser(${u.id})">
+              <i class="fas fa-pen"></i> Edit
+            </button>
+            <button class="action-btn action-delete me-1" onclick="deleteUser(${u.id})">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+            <button class="action-btn action-reset" onclick="resetPassword(${u.id})">
+              <i class="fas fa-key"></i> Reset
+            </button>
+          </td>
+        </tr>`).join('');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(users.length / rowsPerPage);
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+      if (totalPages <= 1) return;
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pg-btn';
+      prevBtn.textContent = '‹ Prev';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => changePage(currentPage - 1);
+      pagination.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'pg-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => changePage(i);
+        pagination.appendChild(btn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pg-btn';
+      nextBtn.textContent = 'Next ›';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => changePage(currentPage + 1);
+      pagination.appendChild(nextBtn);
+    }
+
+    function changePage(page) {
+      const totalPages = Math.ceil(users.length / rowsPerPage);
+      if (page < 1 || page > totalPages) return;
+      displayPage(page);
+    }
+
+    const resetModal = new bootstrap.Modal(document.getElementById('resetModal'));
+    const resetForm = document.getElementById('resetForm');
+    const resetError = document.getElementById('resetError');
+
+    function resetPassword(id) {
+      document.getElementById('resetUserId').value = id;
+      resetForm.reset();
+      resetError.textContent = '';
+      resetModal.show();
+    }
+
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('resetUserId').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        resetError.textContent = 'Passwords do not match.';
+        return;
+      }
+
+      await fetch(`/api/users/${id}/reset-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword })
+      });
+
+      alert('Password reset successfully.');
+      resetModal.hide();
+    });
+
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    const editForm = document.getElementById('editForm');
+
+    function editUser(id) {
+      const user = users.find(u => u.id === id);
+      if (!user) return;
+      document.getElementById('editUserId').value = user.id;
+      document.getElementById('editName').value = user.name;
+      document.getElementById('editRole').value = user.role;
+      document.getElementById('editUsername').value = user.username;
+      editModal.show();
+    }
+
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editUserId').value;
+      const data = {
+        name: document.getElementById('editName').value,
+        role: document.getElementById('editRole').value,
+        username: document.getElementById('editUsername').value,
+        password: null
+      };
+      await fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      alert('User updated successfully.');
+      editModal.hide();
+      loadUsers();
+    });
+
+    function logout() {
+      window.location.href = '/logout';
+    }
+
+    function toggleHdrDropdown(e) {
+      e.stopPropagation();
+      var badge = document.getElementById('hdr-badge');
+      var dropdown = document.getElementById('hdr-dropdown');
+      var isOpen = badge.classList.contains('open');
+      badge.classList.toggle('open', !isOpen);
+      dropdown.classList.toggle('open', !isOpen);
+    }
+
+    document.addEventListener('click', function() {
+      var badge = document.getElementById('hdr-badge');
+      var dropdown = document.getElementById('hdr-dropdown');
+      if (badge) badge.classList.remove('open');
+      if (dropdown) dropdown.classList.remove('open');
+    });
+
+    async function deleteUser(id) {
+      if (confirm('Delete this user?')) {
+        await fetch(`/api/users/${id}`, { method: 'DELETE' });
+        loadUsers();
+      }
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = form.userId.value;
+      const payload = {
+        name: form.name.value,
+        role: form.role.value,
+        username: form.username.value,
+        password: form.password.value
+      };
+      await fetch(id ? `/api/users/${id}` : '/api/users', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      modal.hide();
+      loadUsers();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/user_info').then(r => r.json()).then(d => {
+        if (d.success) {
+          document.getElementById('admin-name').textContent = d.name;
+          document.getElementById('admin-avatar').textContent = d.name ? d.name.charAt(0).toUpperCase() : 'A';
+        }
+      });
+      loadUsers();
+    });
+  </script>
+</body>
+</html>

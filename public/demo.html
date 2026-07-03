@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Demo 1 of Leaflet.PolylineMeasure</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <link rel="stylesheet" href="Leaflet.PolylineMeasure.css" />
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script src="Leaflet.PolylineMeasure.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/bbecquet/Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+        <!-- <style>
+            body {padding: 0; margin: 0;}
+            html, body, #map {height: 100%;}
+        </style> -->
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+            }
+
+            #header-bar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 62px;
+                background: linear-gradient(135deg, #0a1628 0%, #1a2f5a 60%, #0d3b6e 100%);
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 20px;
+                z-index: 1000;
+                box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+                border-bottom: 2px solid #c9a84c;
+            }
+
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .header-title {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.2;
+            }
+
+            .header-title-main {
+                font-size: 20px;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                color: #ffffff;
+                text-transform: uppercase;
+            }
+
+            .header-title-sub {
+                font-size: 10px;
+                font-weight: 400;
+                letter-spacing: 2px;
+                color: #c9a84c;
+                text-transform: uppercase;
+            }
+
+            .header-divider {
+                width: 1px;
+                height: 36px;
+                background: rgba(201,168,76,0.4);
+                margin: 0 16px;
+            }
+
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .header-user-badge {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(255,255,255,0.08);
+                border: 1px solid rgba(201,168,76,0.3);
+                border-radius: 20px;
+                padding: 5px 14px 5px 10px;
+                cursor: pointer;
+                position: relative;
+                user-select: none;
+                transition: background 0.2s;
+            }
+
+            .header-user-badge:hover {
+                background: rgba(255,255,255,0.14);
+            }
+
+            .header-user-badge.open {
+                background: rgba(255,255,255,0.18);
+                border-color: rgba(201,168,76,0.7);
+            }
+
+            .header-user-caret {
+                font-size: 9px;
+                color: #c9a84c;
+                margin-left: 2px;
+                transition: transform 0.2s;
+            }
+
+            .header-user-badge.open .header-user-caret {
+                transform: rotate(180deg);
+            }
+
+            .header-user-dropdown {
+                display: none;
+                position: absolute;
+                top: calc(100% + 8px);
+                right: 0;
+                min-width: 160px;
+                background: #0f1e3d;
+                border: 1px solid rgba(201,168,76,0.4);
+                border-radius: 8px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+                z-index: 2000;
+                overflow: hidden;
+            }
+
+            .header-user-dropdown.open {
+                display: block;
+            }
+
+            .header-dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                font-size: 13px;
+                color: #e0e0e0;
+                cursor: pointer;
+                transition: background 0.15s;
+                border: none;
+                background: none;
+                width: 100%;
+                text-align: left;
+                text-decoration: none;
+            }
+
+            .header-dropdown-item:hover {
+                background: rgba(201,168,76,0.15);
+                color: #ffffff;
+            }
+
+            .header-dropdown-item .di-icon {
+                font-size: 15px;
+                width: 18px;
+                text-align: center;
+            }
+
+            .header-dropdown-divider {
+                height: 1px;
+                background: rgba(201,168,76,0.2);
+                margin: 2px 0;
+            }
+
+            .header-dropdown-item.danger {
+                color: #ff7b7b;
+            }
+
+            .header-dropdown-item.danger:hover {
+                background: rgba(220,60,60,0.2);
+                color: #ff9999;
+            }
+
+            #unsaved-indicator {
+                display: none;
+                align-items: center;
+                gap: 6px;
+                background: rgba(220, 40, 40, 0.18);
+                border: 1px solid rgba(220, 40, 40, 0.6);
+                border-radius: 14px;
+                padding: 4px 12px;
+                font-size: 11px;
+                font-weight: 600;
+                color: #ff6b6b;
+                letter-spacing: 0.4px;
+                animation: unsaved-pulse 2s ease-in-out infinite;
+                cursor: default;
+            }
+
+            #unsaved-indicator.visible {
+                display: flex;
+            }
+
+            #unsaved-indicator .unsaved-dot {
+                width: 7px;
+                height: 7px;
+                background: #ff6b6b;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            @keyframes unsaved-pulse {
+                0%, 100% { opacity: 1; }
+                50%       { opacity: 0.5; }
+            }
+
+            .header-user-avatar {
+                width: 26px;
+                height: 26px;
+                background: #c9a84c;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: 700;
+                color: #0a1628;
+            }
+
+            .header-user-name {
+                font-size: 13px;
+                font-weight: 500;
+                color: #e8e8e8;
+                letter-spacing: 0.3px;
+            }
+
+            .header-tolist-btn {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                background: rgba(201,168,76,0.15);
+                border: 1px solid rgba(201,168,76,0.5);
+                border-radius: 6px;
+                padding: 6px 14px;
+                color: #c9a84c !important;
+                font-size: 12px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                text-decoration: none !important;
+                text-transform: uppercase;
+                transition: background 0.2s;
+            }
+
+            .header-tolist-btn:hover {
+                background: rgba(201,168,76,0.28);
+            }
+
+            #map {
+                position: absolute;
+                top: 62px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            .header-logo {
+                height: 50px;
+                width: 50px;
+                border-radius: 50%;
+                border: 2px solid rgba(201,168,76,0.6);
+                object-fit: contain;
+            }
+
+            .logout-icon {
+                height: 32px;
+                width: 32px;
+                cursor: pointer;
+                opacity: 0.8;
+                transition: opacity 0.2s;
+                vertical-align: middle;
+            }
+
+            .logout-icon:hover {
+                opacity: 1;
+            }
+            
+            .leaflet-bar button.selected {
+                background-color: #8f8;
+            }
+
+            /* Hide built-in polyline measure buttons and default zoom */
+            .polyline-measure-control,
+            .polyline-measure-clearControl,
+            .leaflet-control-zoom {
+                display: none !important;
+            }
+
+            /* ---- Custom Map Toolbar Panel ---- */
+            #map-toolbar {
+                position: absolute;
+                top: 72px;
+                left: 10px;
+                width: 172px;
+                background: #0f1e3d;
+                border: 1px solid rgba(201,168,76,0.35);
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                z-index: 999;
+                overflow: hidden;
+                font-family: inherit;
+            }
+
+            .mtb-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 10px 8px 12px;
+                background: linear-gradient(90deg, #1a2f5a 0%, #0d3b6e 100%);
+                border-bottom: 1px solid rgba(201,168,76,0.3);
+            }
+
+            .mtb-header-title {
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 2px;
+                color: #c9a84c;
+                text-transform: uppercase;
+            }
+
+            .mtb-collapse-btn {
+                background: none;
+                border: 1px solid rgba(201,168,76,0.35);
+                border-radius: 4px;
+                color: #c9a84c;
+                width: 20px;
+                height: 20px;
+                font-size: 15px;
+                line-height: 1;
+                cursor: pointer;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .mtb-collapse-btn:hover {
+                background: rgba(201,168,76,0.2);
+            }
+
+            .mtb-body {
+                padding: 6px 0 8px;
+            }
+
+            .mtb-section-label {
+                font-size: 9px;
+                font-weight: 700;
+                letter-spacing: 1.8px;
+                color: rgba(201,168,76,0.65);
+                text-transform: uppercase;
+                padding: 6px 12px 2px;
+            }
+
+            .mtb-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+                background: none;
+                border: none;
+                border-left: 3px solid transparent;
+                padding: 7px 12px 7px 9px;
+                font-size: 12px;
+                color: #c8c8c8;
+                cursor: pointer;
+                text-align: left;
+                transition: background 0.15s, color 0.15s;
+            }
+
+            .mtb-btn:hover {
+                background: rgba(255,255,255,0.07);
+                color: #ffffff;
+            }
+
+            .mtb-btn.active {
+                background: rgba(201,168,76,0.14);
+                border-left-color: #c9a84c;
+                color: #f5c842;
+            }
+
+            .mtb-btn.active .mtb-icon-img {
+                opacity: 1;
+                filter: brightness(1.4);
+            }
+
+            .mtb-btn-save {
+                color: #90c890;
+            }
+
+            .mtb-btn-save:hover {
+                background: rgba(80,180,80,0.1);
+                color: #b0f0b0;
+            }
+
+            .mtb-icon-img {
+                width: 16px;
+                height: 16px;
+                object-fit: contain;
+                flex-shrink: 0;
+                opacity: 0.8;
+            }
+
+            .mtb-icon-sym {
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                font-weight: 700;
+                color: #9090a8;
+                flex-shrink: 0;
+                line-height: 1;
+            }
+
+            .mtb-divider {
+                height: 1px;
+                background: rgba(201,168,76,0.12);
+                margin: 4px 10px;
+            }
+
+            .mtb-hint {
+                font-size: 10px;
+                color: #f5c842;
+                padding: 4px 12px 0;
+                min-height: 14px;
+                line-height: 1.4;
+                font-style: italic;
+            }
+
+#toastMsg {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                display: none;
+            }
+            </style>
+    </head>
+
+    <body>
+
+        <!-- ✅ Toast -->
+        <div class="toast align-items-center text-bg-danger" id="toastMsg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastText">
+                Invalid login credentials.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="hideToast()"></button>
+            </div>
+        </div>
+
+        <!-- Context Menu -->
+        <div id="markerMenu" 
+            style="
+            display:none;
+            position:absolute;
+            background:white;
+            border:1px solid #ccc;
+            padding:10px;
+            border-radius:4px;
+            z-index:9999;
+            width:120px;
+            ">
+            <button id="rotateBtn" style="width:100%; margin-bottom:6px;">Rotate</button>
+            <button id="deleteBtn" style="width:100%;">Delete</button>
+        </div>
+        <!-- Context Menu -->
+
+        <div id="header-bar">
+            <div class="header-left">
+                <img src="./upnm.png" alt="Logo" class="header-logo">
+                <div class="header-title">
+                    <span class="header-title-main">I-Navigator</span>
+                    <span class="header-title-sub">Naval Passage Planning System</span>
+                </div>
+            </div>
+            <div class="header-divider"></div>
+            <div class="header-right">
+                <div id="unsaved-indicator" title="You have unsaved changes">
+                    <span class="unsaved-dot"></span> Unsaved Changes
+                </div>
+                <div class="header-user-badge" id="user-badge" onclick="toggleUserDropdown(event)">
+                    <div class="header-user-avatar" id="user-avatar">?</div>
+                    <span class="header-user-name" id="user-name">Loading...</span>
+                    <span class="header-user-caret">&#9660;</span>
+                    <div class="header-user-dropdown" id="user-dropdown">
+                        <a href="/main.html" class="header-dropdown-item" id="nav-userlist-link" style="display:none;">
+                            <i class="fas fa-users di-icon"></i> User List
+                        </a>
+                        <div class="header-dropdown-divider"></div>
+                        <button class="header-dropdown-item danger" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt di-icon"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Map Toolbar Panel -->
+        <div id="map-toolbar">
+            <div class="mtb-header">
+                <span class="mtb-header-title">&#9881; Map Tools</span>
+                <button class="mtb-collapse-btn" id="mtb-toggle" title="Collapse panel">&#8722;</button>
+            </div>
+            <div class="mtb-body" id="mtb-body">
+
+                <div class="mtb-section-label">Navigation</div>
+                <button class="mtb-btn" id="tb-zoom-in" title="Zoom In">
+                    <span class="mtb-icon-sym">+</span> Zoom In
+                </button>
+                <button class="mtb-btn" id="tb-zoom-out" title="Zoom Out">
+                    <span class="mtb-icon-sym">&#8722;</span> Zoom Out
+                </button>
+
+                <div class="mtb-divider"></div>
+
+                <div class="mtb-section-label">Drawing &amp; Annotate</div>
+                <button class="mtb-btn" id="tb-protractor" title="Draw a protractor course line">
+                    <img src="./compass.png" class="mtb-icon-img"> Protractor
+                </button>
+                <button class="mtb-btn" id="tb-text" title="Click the map to place a text label">
+                    <img src="./text.png" class="mtb-icon-img"> Add Text
+                </button>
+
+                <div class="mtb-divider"></div>
+
+                <button class="mtb-btn mtb-btn-save" id="tb-save" title="Save your chart to the server">
+                    <img src="./diskette.png" class="mtb-icon-img"> Save Chart
+                </button>
+
+                <div class="mtb-divider"></div>
+
+                <div class="mtb-section-label">Layers</div>
+                <button class="mtb-btn active" id="tb-toggle-chart" title="Toggle chart layer on/off">
+                    <span class="mtb-icon-sym" style="font-size:13px;">&#9632;</span> Chart Layer
+                </button>
+
+                <div class="mtb-hint" id="tb-hint"></div>
+            </div>
+        </div>
+
+<div id="map"></div>
+        <script>
+            let userID = "";
+
+            // ---- Unsaved-changes tracking ----
+            let _isDirty = false;
+            let _isLoading = false;
+
+            function markDirty() {
+                if (_isLoading) return;
+                if (_isDirty) return;
+                _isDirty = true;
+                document.getElementById('unsaved-indicator').classList.add('visible');
+            }
+
+            function markClean() {
+                _isDirty = false;
+                document.getElementById('unsaved-indicator').classList.remove('visible');
+            }
+
+            window.addEventListener('beforeunload', function(e) {
+                if (_isDirty) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Leave anyway?';
+                }
+            });
+            // ----------------------------------
+            let userName = "";
+            let userNameSelected = "";
+            const menu = document.getElementById("markerMenu");
+            const rotateBtn = document.getElementById("rotateBtn");
+            const deleteBtn = document.getElementById("deleteBtn");
+            let isEditDrawMeasurement = false;
+
+            let dataMap = {"measurement": [], "icon": [], "text": []}
+            // https://tile.openstreetmap.org/{z}/{x}/{y}.png
+            // https://escom.tilerepo.net/mindmatic/tileserver.php?/index.json?/escom/{z}/{x}/{y}.png
+            var layerOsm = new L.TileLayer ('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {subdomains:['server','services'], maxZoom:19, noWrap:false, attribution:'<a href="https://www.arcgis.com/">ArcGIS</a>' });
+            var map = new L.Map ('map', {zoomControl: false, minZoom: 6, maxZoom: 15}).addLayer (layerOsm).setView (new L.LatLng(3.1319, 101.6841), 8);
+            
+            
+            const activeChartLayer = L.tileLayer(
+                `/tiles/5/{z}/{x}/{y}.png`,
+                {
+                    opacity: 0.9,
+                    maxZoom: 18,
+                    tms: false  // XYZ format (same as OpenStreetMap)
+                }
+            );
+            activeChartLayer.addTo(map);
+
+            L.control.scale ({maxWidth:240, metric:true, imperial:false, position: 'bottomleft'}).addTo (map);
+            let polylineMeasure = L.control.polylineMeasure (
+                {
+                    position:'topleft', 
+                    unit:'nauticalmiles', 
+                    showBearings:true, 
+                    clearMeasurementsOnStop: false, 
+                    showClearControl: true, 
+                    showUnitControl: false,
+                    bearingTextOut: 'Bearing',
+                    startCircle: {                  // Style settings for circle marker indicating the starting point of the polyline
+                        color: '#000',              // Color of the border of the circle
+                        weight: 1,                  // Weight of the circle
+                        fillColor: '#0f0',          // Fill color of the circle
+                        fillOpacity: 1,             // Fill opacity of the circle
+                        radius: 5                   // Radius of the circle
+                    },
+                    intermedCircle: {               // Style settings for all circle markers between startCircle and endCircle
+                        color: '#000',              // Color of the border of the circle
+                        weight: 1,                  // Weight of the circle
+                        fillColor: '#ff0',          // Fill color of the circle
+                        fillOpacity: 1,             // Fill opacity of the circle
+                        radius: 5                   // Radius of the circle
+                    },
+                    currentCircle: {                // Style settings for circle marker indicating the latest point of the polyline during drawing a line
+                        color: '#000',              // Color of the border of the circle
+                        weight: 1,                  // Weight of the circle
+                        fillColor: '#f0f',          // Fill color of the circle
+                        fillOpacity: 1,             // Fill opacity of the circle
+                        radius: 5                   // Radius of the circle
+                    },
+                    endCircle: {                    // Style settings for circle marker indicating the last point of the polyline
+                        color: '#000',              // Color of the border of the circle
+                        weight: 1,                  // Weight of the circle
+                        fillColor: '#f00',          // Fill color of the circle
+                        fillOpacity: 1,             // Fill opacity of the circle
+                        radius: 5                   // Radius of the circle
+                    }        
+                })
+            // polylineMeasure.addTo (map);
+
+            // function debugevent(e) { 
+            //     if (e.type === "polylinemeasure:toggle"){
+            //         isEditDrawMeasurement = e.status
+            //     }
+            //     // console.log(e.type) 
+            //     console.log(e.type, e, polylineMeasure._currentLine) 
+            // }
+
+            map.on('polylinemeasure:toggle', debugevent);
+            map.on('polylinemeasure:start', debugevent);
+            map.on('polylinemeasure:resume', debugevent);
+            map.on('polylinemeasure:finish', debugevent);
+            map.on('polylinemeasure:change', debugevent);
+            map.on('polylinemeasure:clear', debugevent);
+            map.on('polylinemeasure:add', debugevent);
+            map.on('polylinemeasure:insert', debugevent);
+            map.on('polylinemeasure:move', debugevent);
+            map.on('polylinemeasure:remove', debugevent);
+
+            let allPlot = [];
+
+            function debugevent(e) { 
+                // console.log(e.type)
+                if (e.type === "polylinemeasure:finish") {
+                    // console.log(e.type, e, polylineMeasure._currentLine)
+                    // console.log(polylineMeasure._currentLine)
+                    // Extract coordinates from the polyline that was just drawn
+                    const coords = polylineMeasure._currentLine.circleCoords.map(latlng => ({
+                        lat: latlng.lat,
+                        lng: latlng.lng
+                    }));
+
+                    allPlot.push(coords);
+                    markDirty();
+                }
+                else if (e.type === "polylinemeasure:change"){
+                    console.log(polylineMeasure)
+                     let result = polylineMeasure._arrPolylines.map(data => {
+                        let layer1 = data.circleCoords.map(latlng => ({
+                            lat: latlng.lat,
+                            lng: latlng.lng
+                        }));
+                        return layer1;
+                     })
+                     console.log(result)
+                     allPlot = result;
+                     markDirty();
+                }
+                else if (e.type === "polylinemeasure:clear") {
+                    allPlot = [];
+                    markDirty();
+                }
+                // console.log(e.type)
+                // console.log(polylineMeasure)
+                // console.log(e)
+            }
+            // ------------------------------------- Image Upload --------------------------------------
+
+            let awaitingMapClick = false;
+            let placeMarkerMode = false;
+            let clickedLatLng = null;
+            let markers = []; // Keep track of added markers
+
+            const icons = [
+                { url: './arrow3.png', name: 'arrow3', icon: "./arrow3_trans.png" },
+                { url: './arrow2.png', name: 'arrow2', icon: "./arrow2_trans.png" },
+                { url: './sikat.png', name: 'sikat', icon: "./sikat_trans.png" }
+            ];
+
+            // const easyButtons = icons.map(icon => 
+            //     L.easyButton(`<img src="${icon.url}" class="img-plot">`, function(btn, map){
+            //         if(isEditDrawMeasurement){
+            //             alert("Please disable draw line first.")
+            //             return;
+            //         }
+            //         currentIconUrl = icon.icon;
+            //         placeMarkerMode = true;
+            //         alert(`Click anywhere on the map to place ${icon.name} marker.`);
+            //     })
+            // );
+            
+            // L.easyBar(easyButtons).addTo(map);
+
+            map.on('click', function(e) {
+                if (!placeMarkerMode || !currentIconUrl) return;
+                let markerSingle = createMarker(e.latlng, currentIconUrl);
+
+                
+                placeMarkerMode = false; // Exit placement mode after one marker
+            });
+
+            function createMarker(latlng, iconUrl, myId=crypto.randomUUID(), rotateAngel = 0, markerIconSize = [40, 40]) {
+                const icon = L.icon({
+                    iconUrl: iconUrl,
+                    iconSize: markerIconSize,
+                    iconAnchor: [markerIconSize[0]/2, markerIconSize[1]/2]
+                });
+
+                const marker = L.marker(latlng, {
+                    icon: icon,
+                    myId: myId,      // save in marker.options.myId
+                    rotationAngle: rotateAngel,
+                    rotationOrigin: 'center center',
+                    draggable: true
+                }).addTo(map);
+
+                // add storage
+                markers.push({
+                    myId: myId,
+                    latlng: latlng,
+                    iconUrl: iconUrl,
+                    rotationAngle: rotateAngel,
+                    iconSize: markerIconSize
+                });
+                markDirty();
+
+                // Right-click context menu
+                marker.on('contextmenu', function(event) {
+                    const menu = L.popup()
+                        .setLatLng(event.latlng)
+                        .setContent(`
+                            <div style="display:flex; flex-direction:column;">
+                                <button id="rotate-btn">Rotate +10°</button>
+                                <button id="delete-btn">Delete</button>
+                            </div>
+                        `).openOn(map);
+
+                    setTimeout(() => {
+                        document.getElementById('rotate-btn').onclick = () => {
+                            const current = marker.options.rotationAngle || 0;
+                            marker.setRotationAngle(current + 10);
+                            const markerFind = markers.find(m => m.myId === marker.options.myId);
+                            if (markerFind) {
+                                // Update the attribute
+                                markerFind.rotationAngle = current + 10;
+                            } else {
+                                console.log('Marker not found');
+                            }
+                            map.closePopup(menu);
+                        };
+                        document.getElementById('delete-btn').onclick = () => {
+                            map.removeLayer(marker);
+                            // const index = markers.indexOf(marker);
+                            // if (index > -1) markers.splice(index, 1);
+                            const newMarkers = markers.filter(m => m.myId !== marker.options.myId);
+                            markers = newMarkers;
+                            map.closePopup(menu);
+                        };
+                    }, 10);
+                });
+
+                return marker;
+            }
+
+            // ------------------------------------ Add Text -------------------------------
+            let awaitingTextClick = false;
+            let textMarkers = []; // Store text labels
+
+
+            // 🖱️ On map click, prompt for text and show it
+            map.on('click', function(e) {
+                if (!awaitingTextClick) return;
+
+                const text = prompt("Enter label text:");
+                if (text) { makeText(e.latlng, text); }
+
+                awaitingTextClick = false;
+                map.getContainer().style.cursor = '';
+                var tbText = document.getElementById('tb-text');
+                if (tbText) tbText.classList.remove('active');
+                setToolHint('');
+            });
+
+            function makeText(latlng, text, myId = crypto.randomUUID(), rotationAngle = 0, textColor = '#000000', borderColor = '#808080', bgColor = 'transparent', anchorAbove = false) {
+                function makeTextIcon(angle, tc, bc, bg) {
+                    if (anchorAbove) {
+                        var arrowFill = (bg === 'transparent' || !bg) ? '#ffffff' : bg;
+                        return L.divIcon({
+                            className: 'custom-text-label',
+                            html: `<div style="position:relative;display:inline-block;white-space:nowrap;transform:translate(-50%,calc(-100% - 9px));">` +
+                                  `<div style="display:inline-block;background:${bg};border:1px solid ${bc};border-radius:4px;padding:3px 8px;font-size:14px;color:${tc};transform:rotate(${angle}deg);transform-origin:center center;">${text}</div>` +
+                                  `<div style="position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:9px solid ${bc};"></div>` +
+                                  `<div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:8px solid ${arrowFill};"></div>` +
+                                  `</div>`,
+                            iconSize: [0, 0],
+                            iconAnchor: [0, 0]
+                        });
+                    }
+                    return L.divIcon({
+                        className: 'custom-text-label',
+                        html: `<div style="
+                            display: inline-block;
+                            white-space: nowrap;
+                            font-size: 14px;
+                            color: ${tc};
+                            background: ${bg};
+                            border: 1px solid ${bc};
+                            border-radius: 4px;
+                            padding: 2px 6px;
+                            width: auto;
+                            transform: rotate(${angle}deg);
+                            transform-origin: center center;
+                            ">${text}</div>`,
+                        iconAnchor: [15, 15],
+                    });
+                }
+
+                const marker = L.marker(latlng, {
+                    icon: makeTextIcon(rotationAngle, textColor, borderColor, bgColor),
+                    myId: myId
+                }).addTo(map);
+
+                textMarkers.push({
+                    myId: myId,
+                    latlng: latlng,
+                    text: text,
+                    rotationAngle: rotationAngle,
+                    textColor: textColor,
+                    borderColor: borderColor,
+                    bgColor: bgColor,
+                    anchorAbove: anchorAbove
+                });
+                markDirty();
+
+                marker.on('contextmenu', function(event) {
+                    const f = textMarkers.find(m => m.myId === marker.options.myId);
+                    const uid = marker.options.myId.replace(/-/g, '').substring(0, 8);
+
+                    const menu = L.popup()
+                        .setLatLng(event.latlng)
+                        .setContent(`
+                            <div style="display:flex; flex-direction:column; gap:6px; min-width:170px;">
+                                <label style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    Text Color <input type="color" id="tc-${uid}" value="${f ? f.textColor : '#000000'}">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    Border Color <input type="color" id="bc-${uid}" value="${f ? f.borderColor : '#808080'}">
+                                </label>
+                                <label style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    Background <input type="color" id="bg-${uid}" value="${f && f.bgColor !== 'transparent' ? f.bgColor : '#ffffff'}">
+                                </label>
+                                ${anchorAbove ? '' : `<button id="rotate-text-cw-${uid}">Rotate +10°</button><button id="rotate-text-ccw-${uid}">Rotate -10°</button>`}
+                                <button id="delete-btn-word-${uid}">Delete</button>
+                            </div>
+                        `).openOn(map);
+
+                    setTimeout(() => {
+                        document.getElementById(`tc-${uid}`).oninput = (e) => {
+                            const f = textMarkers.find(m => m.myId === marker.options.myId);
+                            if (f) { f.textColor = e.target.value; marker.setIcon(makeTextIcon(f.rotationAngle, f.textColor, f.borderColor, f.bgColor)); }
+                        };
+                        document.getElementById(`bc-${uid}`).oninput = (e) => {
+                            const f = textMarkers.find(m => m.myId === marker.options.myId);
+                            if (f) { f.borderColor = e.target.value; marker.setIcon(makeTextIcon(f.rotationAngle, f.textColor, f.borderColor, f.bgColor)); }
+                        };
+                        document.getElementById(`bg-${uid}`).oninput = (e) => {
+                            const f = textMarkers.find(m => m.myId === marker.options.myId);
+                            if (f) { f.bgColor = e.target.value; marker.setIcon(makeTextIcon(f.rotationAngle, f.textColor, f.borderColor, f.bgColor)); }
+                        };
+                        const cwBtn = document.getElementById(`rotate-text-cw-${uid}`);
+                        if (cwBtn) cwBtn.onclick = () => {
+                            const f = textMarkers.find(m => m.myId === marker.options.myId);
+                            if (f) { f.rotationAngle = (f.rotationAngle || 0) + 10; marker.setIcon(makeTextIcon(f.rotationAngle, f.textColor, f.borderColor, f.bgColor)); }
+                            map.closePopup(menu);
+                        };
+                        const ccwBtn = document.getElementById(`rotate-text-ccw-${uid}`);
+                        if (ccwBtn) ccwBtn.onclick = () => {
+                            const f = textMarkers.find(m => m.myId === marker.options.myId);
+                            if (f) { f.rotationAngle = (f.rotationAngle || 0) - 10; marker.setIcon(makeTextIcon(f.rotationAngle, f.textColor, f.borderColor, f.bgColor)); }
+                            map.closePopup(menu);
+                        };
+                        document.getElementById(`delete-btn-word-${uid}`).onclick = () => {
+                            map.removeLayer(marker);
+                            textMarkers = textMarkers.filter(m => m.myId !== marker.options.myId);
+                            map.closePopup(menu);
+                        };
+                    }, 10);
+                });
+
+                return marker;
+            }
+
+
+            // ------------------------------------ Protractor -------------------------
+            function protrToDMS(decimal, isLat) {
+                var dir = isLat ? (decimal >= 0 ? 'N' : 'S') : (decimal >= 0 ? 'E' : 'W');
+                var abs = Math.abs(decimal);
+                var deg = Math.floor(abs);
+                var minFull = (abs - deg) * 60;
+                var min = Math.floor(minFull);
+                var sec = ((minFull - min) * 60).toFixed(1);
+                return deg + '&deg; ' + min + '\' ' + sec + '" ' + dir;
+            }
+
+            let protractors = [];           // [{myId, points:[{myId,lat,lng,marker}], segs:[{line,labelMarker}]}]
+            let protractorDrawMode = false;
+            let currentProtractorId = null;
+            let _protrClickTimer = null;
+
+            const PROTR_POINT_ICON = L.divIcon({
+                className: '',
+                html: '<div style="width:12px;height:12px;background:#e06000;border:2px solid #fff;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,0.6);cursor:grab;"></div>',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            });
+
+            function calcProtrNM(p1, p2) {
+                return L.latLng(p1.lat, p1.lng).distanceTo(L.latLng(p2.lat, p2.lng)) / 1852;
+            }
+
+            function calcProtrBrng(p1, p2) {
+                var lat1 = p1.lat * Math.PI / 180, lat2 = p2.lat * Math.PI / 180;
+                var dLng = (p2.lng - p1.lng) * Math.PI / 180;
+                var y = Math.sin(dLng) * Math.cos(lat2);
+                var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+                var brng = Math.atan2(y, x) * 180 / Math.PI;
+                return ((brng % 360) + 360) % 360;
+            }
+
+            function makeProtrSegIcon(p1, p2) {
+                var nm = calcProtrNM(p1, p2).toFixed(2);
+                var brng = calcProtrBrng(p1, p2).toFixed(1);
+                return L.divIcon({
+                    className: '',
+                    html: '<div style="display:inline-block;background:rgba(0,0,0,0.65);color:#fff;font-size:11px;padding:2px 5px;border-radius:3px;white-space:nowrap;pointer-events:none;">' + nm + ' NM &nbsp; ' + brng + '&deg;</div>',
+                    iconSize: [1, 1],
+                    iconAnchor: [0, 0]
+                });
+            }
+
+            function updateProtrSeg(protr, segIdx) {
+                var p1 = protr.points[segIdx], p2 = protr.points[segIdx + 1];
+                if (!p1 || !p2) return;
+                var seg = protr.segs[segIdx];
+                seg.line.setLatLngs([[p1.lat, p1.lng], [p2.lat, p2.lng]]);
+                var midLat = (p1.lat + p2.lat) / 2, midLng = (p1.lng + p2.lng) / 2;
+                seg.labelMarker.setLatLng([midLat, midLng]);
+                seg.labelMarker.setIcon(makeProtrSegIcon(p1, p2));
+                if (protr.isTidalStream) applyTidalArrows(seg, p1, p2);
+                else if (protr.isCMG) applyCMGArrows(seg, p1, p2);
+                else if (protr.isCTS) applyCTSArrows(seg, p1, p2);
+            }
+
+            function applyTidalArrows(seg, p1, p2) {
+                (seg.tidalArrows || []).forEach(function(m) { map.removeLayer(m); });
+                seg.tidalArrows = [];
+                var brng = calcProtrBrng(p1, p2);
+                var rot = brng - 90;
+                var midLat = (p1.lat + p2.lat) / 2;
+                var midLng = (p1.lng + p2.lng) / 2;
+                var c = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 14" width="8" height="14">' +
+                        '<polyline points="2,1 7,7 2,13" stroke="#0055cc" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+                        '</svg>';
+                var icon = L.divIcon({
+                    className: '',
+                    html: '<div style="transform:rotate(' + rot + 'deg);transform-origin:center center;display:inline-flex;align-items:center;gap:0px;line-height:0;">' +
+                          c + c + c + '</div>',
+                    iconSize: [24, 14],
+                    iconAnchor: [12, 7]
+                });
+                seg.tidalArrows.push(L.marker([midLat, midLng], { icon: icon, interactive: false }).addTo(map));
+            }
+
+            function applyCMGArrows(seg, p1, p2) {
+                (seg.tidalArrows || []).forEach(function(m) { map.removeLayer(m); });
+                seg.tidalArrows = [];
+                var brng = calcProtrBrng(p1, p2);
+                var rot = brng - 90;
+                var midLat = (p1.lat + p2.lat) / 2;
+                var midLng = (p1.lng + p2.lng) / 2;
+                var c = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 14" width="8" height="14">' +
+                        '<polyline points="2,1 7,7 2,13" stroke="#cc0000" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+                        '</svg>';
+                var icon = L.divIcon({
+                    className: '',
+                    html: '<div style="transform:rotate(' + rot + 'deg);transform-origin:center center;display:inline-flex;align-items:center;gap:0px;line-height:0;">' +
+                          c + c + '</div>',
+                    iconSize: [16, 14],
+                    iconAnchor: [8, 7]
+                });
+                seg.tidalArrows.push(L.marker([midLat, midLng], { icon: icon, interactive: false }).addTo(map));
+            }
+
+            function applyCTSArrows(seg, p1, p2) {
+                (seg.tidalArrows || []).forEach(function(m) { map.removeLayer(m); });
+                seg.tidalArrows = [];
+                var brng = calcProtrBrng(p1, p2);
+                var rot = brng - 90;
+                var midLat = (p1.lat + p2.lat) / 2;
+                var midLng = (p1.lng + p2.lng) / 2;
+                var c = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 14" width="8" height="14">' +
+                        '<polyline points="2,1 7,7 2,13" stroke="#111111" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+                        '</svg>';
+                var icon = L.divIcon({
+                    className: '',
+                    html: '<div style="transform:rotate(' + rot + 'deg);transform-origin:center center;display:inline-flex;align-items:center;gap:0px;line-height:0;">' +
+                          c + '</div>',
+                    iconSize: [8, 14],
+                    iconAnchor: [4, 7]
+                });
+                seg.tidalArrows.push(L.marker([midLat, midLng], { icon: icon, interactive: false }).addTo(map));
+            }
+
+            function createProtrSegObj(protr, p1, p2) {
+                var isTidal = protr.isTidalStream;
+                var isCMG = protr.isCMG;
+                var isCTS = protr.isCTS;
+                var line = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], {
+                    color: isTidal ? '#0055cc' : (isCMG ? '#cc0000' : (isCTS ? '#111111' : '#e06000')),
+                    weight: (isTidal || isCMG || isCTS) ? 3 : 2,
+                    dashArray: (isTidal || isCMG || isCTS) ? null : '6,4',
+                    interactive: true
+                }).addTo(map);
+                var midLat = (p1.lat + p2.lat) / 2, midLng = (p1.lng + p2.lng) / 2;
+                var labelMarker = L.marker([midLat, midLng], {
+                    icon: makeProtrSegIcon(p1, p2), interactive: false
+                }).addTo(map);
+                line.on('contextmenu', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    var menu = L.popup({ closeButton: true })
+                        .setLatLng(e.latlng)
+                        .setContent('<button id="protr-del-btn" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">Delete Protractor</button>')
+                        .openOn(map);
+                    setTimeout(function() {
+                        var btn = document.getElementById('protr-del-btn');
+                        if (btn) btn.onclick = function() {
+                            deleteProtractor(protr.myId);
+                            map.closePopup(menu);
+                        };
+                    }, 10);
+                });
+                var seg = { line: line, labelMarker: labelMarker, tidalArrows: [] };
+                if (isTidal) applyTidalArrows(seg, p1, p2);
+                else if (isCMG) applyCMGArrows(seg, p1, p2);
+                else if (isCTS) applyCTSArrows(seg, p1, p2);
+                return seg;
+            }
+
+            function addProtrSegment(protr, segIdx) {
+                var p1 = protr.points[segIdx], p2 = protr.points[segIdx + 1];
+                protr.segs.push(createProtrSegObj(protr, p1, p2));
+            }
+
+            function deleteProtrPoint(protr, pt) {
+                var i = protr.points.indexOf(pt);
+                if (i === -1) return;
+                var hasPrev = i > 0;
+                var hasNext = i < protr.points.length - 1;
+
+                function removeSegLayers(seg) {
+                    map.removeLayer(seg.line);
+                    map.removeLayer(seg.labelMarker);
+                    (seg.tidalArrows || []).forEach(function(m) { map.removeLayer(m); });
+                }
+                // Remove segment after point first (higher index), then before
+                if (hasNext) { removeSegLayers(protr.segs[i]); protr.segs.splice(i, 1); }
+                if (hasPrev) { removeSegLayers(protr.segs[i - 1]); protr.segs.splice(i - 1, 1); }
+
+                // Remove point layers
+                if (pt.marker) map.removeLayer(pt.marker);
+                if (pt.coordLabel) map.removeLayer(pt.coordLabel);
+                protr.points.splice(i, 1);
+
+                // Reconnect neighbors if middle point was removed
+                if (hasPrev && hasNext) {
+                    var p1 = protr.points[i - 1], p2 = protr.points[i];
+                    protr.segs.splice(i - 1, 0, createProtrSegObj(protr, p1, p2));
+                }
+
+                // Clean up empty protractor
+                if (protr.points.length === 0) {
+                    deleteProtractor(protr.myId);
+                }
+            }
+
+            function buildPointPopupContent(protr, ptIdx) {
+                var pt = protr.points[ptIdx];
+                var lines = [
+                    '<b>Point ' + (ptIdx + 1) + '</b>',
+                    'Lat: ' + protrToDMS(pt.lat, true),
+                    'Lng: ' + protrToDMS(pt.lng, false)
+                ];
+                // segment before this point
+                if (ptIdx > 0) {
+                    var prev = protr.points[ptIdx - 1];
+                    lines.push('From Point ' + ptIdx + ': ' + calcProtrNM(prev, pt).toFixed(2) + ' NM, ' + calcProtrBrng(prev, pt).toFixed(1) + '&deg;');
+                }
+                // segment after this point
+                if (ptIdx < protr.points.length - 1) {
+                    var next = protr.points[ptIdx + 1];
+                    lines.push('To Point ' + (ptIdx + 2) + ': ' + calcProtrNM(pt, next).toFixed(2) + ' NM, ' + calcProtrBrng(pt, next).toFixed(1) + '&deg;');
+                }
+                return lines.join('<br>');
+            }
+
+            function makeProtrCoordIcon(lat, lng) {
+                return L.divIcon({
+                    className: '',
+                    html: '<div style="display:inline-block;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;padding:2px 5px;border-radius:3px;white-space:nowrap;pointer-events:none;margin-left:10px;margin-top:-8px;">' +
+                          protrToDMS(lat, true) + ' &nbsp; ' + protrToDMS(lng, false) + '</div>',
+                    iconSize: [1, 1],
+                    iconAnchor: [0, 0]
+                });
+            }
+
+            function addProtrPoint(protr, latlng, ptMyId) {
+                var pt = { myId: ptMyId || crypto.randomUUID(), lat: latlng.lat, lng: latlng.lng, marker: null, coordLabel: null };
+                protr.points.push(pt);
+                var ptIdx = protr.points.length - 1;
+
+                var marker = L.marker([pt.lat, pt.lng], {
+                    icon: PROTR_POINT_ICON,
+                    draggable: true,
+                    zIndexOffset: 1000
+                }).addTo(map);
+                pt.marker = marker;
+
+                var coordLabel = L.marker([pt.lat, pt.lng], {
+                    icon: makeProtrCoordIcon(pt.lat, pt.lng),
+                    interactive: false,
+                    zIndexOffset: 999
+                }).addTo(map);
+                pt.coordLabel = coordLabel;
+
+                marker.on('drag', function(e) {
+                    pt.lat = e.target.getLatLng().lat;
+                    pt.lng = e.target.getLatLng().lng;
+                    coordLabel.setLatLng([pt.lat, pt.lng]);
+                    coordLabel.setIcon(makeProtrCoordIcon(pt.lat, pt.lng));
+                    var ci = protr.points.indexOf(pt);
+                    if (ci > 0) updateProtrSeg(protr, ci - 1);
+                    if (ci < protr.points.length - 1) updateProtrSeg(protr, ci);
+                });
+
+                marker.on('dragend', function() {
+                    pt.lat = marker.getLatLng().lat;
+                    pt.lng = marker.getLatLng().lng;
+                });
+
+
+                // Right-click → context menu
+                marker.on('contextmenu', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    if (protractorDrawMode) finishProtractorDraw();
+                    var menuHtml =
+                        '<div style="display:flex;flex-direction:column;gap:4px;min-width:160px;">' +
+                        '<button id="protr-label-btn" style="background:#2c7a2c;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">&#9998; Add Label Text</button>' +
+                        '<button id="protr-sunrise-btn" style="background:#e07b00;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">&#9728; Add Sunrise / Sunset</button>' +
+                        '<button id="protr-arrow-btn" style="background:#cc2200;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">&#8597; Add Symbol Arrow</button>' +
+                        '<button id="protr-tidal-btn" style="background:#0055cc;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">&#10148;&#10148;&#10148; Change to Tidal Stream</button>' +
+                        '<button id="protr-cmg-btn" style="background:#cc0000;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">&#10148;&#10148; Change to CMG</button>' +
+                        '<button id="protr-cts-btn" style="background:#222;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">&#10148; Change to CTS</button>' +
+                        '<button id="protr-del-pt-btn" style="background:#555;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">Delete Point</button>' +
+                        '</div>';
+                    var menu = L.popup({ closeButton: true })
+                        .setLatLng(marker.getLatLng())
+                        .setContent(menuHtml)
+                        .openOn(map);
+                    setTimeout(function() {
+                        var labelBtn = document.getElementById('protr-label-btn');
+                        if (labelBtn) labelBtn.onclick = function() {
+                            map.closePopup(menu);
+                            var text = prompt('Enter label text:');
+                            if (text && text.trim()) {
+                                makeText({ lat: pt.lat, lng: pt.lng }, text.trim(), undefined, 0, '#000000', '#808080', 'transparent', true);
+                            }
+                        };
+                        var sunBtn = document.getElementById('protr-sunrise-btn');
+                        if (sunBtn) sunBtn.onclick = function() {
+                            map.closePopup(menu);
+                            createMarker({ lat: pt.lat, lng: pt.lng }, './sikat_trans.png');
+                        };
+                        var arrowBtn = document.getElementById('protr-arrow-btn');
+                        if (arrowBtn) arrowBtn.onclick = function() {
+                            map.closePopup(menu);
+                            var ci = protr.points.indexOf(pt);
+                            var bearing = 0;
+                            if (ci < protr.points.length - 1) {
+                                bearing = calcProtrBrng(pt, protr.points[ci + 1]);
+                            } else if (ci > 0) {
+                                bearing = calcProtrBrng(protr.points[ci - 1], pt);
+                            }
+                            var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 60">' +
+                                '<polygon points="10,1 20,17 14,17 14,43 20,43 10,59 0,43 6,43 6,17 0,17" fill="#cc2200"/>' +
+                                '</svg>';
+                            var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+                            createMarker({ lat: pt.lat, lng: pt.lng }, url, undefined, bearing, [20, 60]);
+                        };
+                        var tidalBtn = document.getElementById('protr-tidal-btn');
+                        if (tidalBtn) tidalBtn.onclick = function() {
+                            map.closePopup(menu);
+                            if (!protr.isTidalStream) convertToTidalStream(protr);
+                        };
+                        var cmgBtn = document.getElementById('protr-cmg-btn');
+                        if (cmgBtn) cmgBtn.onclick = function() {
+                            map.closePopup(menu);
+                            if (!protr.isCMG) convertToCMG(protr);
+                        };
+                        var ctsBtn = document.getElementById('protr-cts-btn');
+                        if (ctsBtn) ctsBtn.onclick = function() {
+                            map.closePopup(menu);
+                            if (!protr.isCTS) convertToCTS(protr);
+                        };
+                        var delBtn = document.getElementById('protr-del-pt-btn');
+                        if (delBtn) delBtn.onclick = function() {
+                            map.closePopup(menu);
+                            deleteProtrPoint(protr, pt);
+                        };
+                    }, 10);
+                });
+
+                // If this is not the first point, draw segment from previous point
+                if (protr.points.length > 1) {
+                    addProtrSegment(protr, protr.points.length - 2);
+                }
+            }
+
+            function deleteProtractor(myId) {
+                var idx = protractors.findIndex(function(p) { return p.myId === myId; });
+                if (idx === -1) return;
+                var protr = protractors[idx];
+                protr.points.forEach(function(pt) {
+                    if (pt.marker) map.removeLayer(pt.marker);
+                    if (pt.coordLabel) map.removeLayer(pt.coordLabel);
+                });
+                protr.segs.forEach(function(seg) {
+                    map.removeLayer(seg.line);
+                    map.removeLayer(seg.labelMarker);
+                    (seg.tidalArrows || []).forEach(function(m) { map.removeLayer(m); });
+                });
+                protractors.splice(idx, 1);
+            }
+
+            function convertToTidalStream(protr) {
+                protr.isTidalStream = true; protr.isCMG = false; protr.isCTS = false;
+                protr.segs.forEach(function(seg, i) {
+                    seg.line.setStyle({ color: '#0055cc', weight: 3, dashArray: null });
+                    applyTidalArrows(seg, protr.points[i], protr.points[i + 1]);
+                });
+                markDirty();
+            }
+
+            function convertToCMG(protr) {
+                protr.isCMG = true; protr.isTidalStream = false; protr.isCTS = false;
+                protr.segs.forEach(function(seg, i) {
+                    seg.line.setStyle({ color: '#cc0000', weight: 3, dashArray: null });
+                    applyCMGArrows(seg, protr.points[i], protr.points[i + 1]);
+                });
+                markDirty();
+            }
+
+            function convertToCTS(protr) {
+                protr.isCTS = true; protr.isTidalStream = false; protr.isCMG = false;
+                protr.segs.forEach(function(seg, i) {
+                    seg.line.setStyle({ color: '#111111', weight: 3, dashArray: null });
+                    applyCTSArrows(seg, protr.points[i], protr.points[i + 1]);
+                });
+                markDirty();
+            }
+
+            function createProtractorFromData(data) {
+                var protr = { myId: data.myId, points: [], segs: [], isTidalStream: false, isCMG: false, isCTS: false };
+                protractors.push(protr);
+                data.points.forEach(function(pt) {
+                    addProtrPoint(protr, { lat: pt.lat, lng: pt.lng }, pt.myId);
+                });
+                if (data.isTidalStream) convertToTidalStream(protr);
+                else if (data.isCMG) convertToCMG(protr);
+                else if (data.isCTS) convertToCTS(protr);
+            }
+
+            function finishProtractorDraw() {
+                protractorDrawMode = false;
+                currentProtractorId = null;
+                map.getContainer().style.cursor = '';
+                map.doubleClickZoom.enable();
+                var tbProtr = document.getElementById('tb-protractor');
+                if (tbProtr) tbProtr.classList.remove('active');
+                setToolHint('');
+                markDirty();
+            }
+
+            map.on('click', function(e) {
+                if (!protractorDrawMode) return;
+                // Debounce to ignore the first click of a double-click
+                if (_protrClickTimer) { clearTimeout(_protrClickTimer); _protrClickTimer = null; return; }
+                _protrClickTimer = setTimeout(function() {
+                    _protrClickTimer = null;
+                    var protr = protractors.find(function(p) { return p.myId === currentProtractorId; });
+                    if (!protr) return;
+                    addProtrPoint(protr, e.latlng);
+                }, 220);
+            });
+
+            map.on('dblclick', function() {
+                if (!protractorDrawMode) return;
+                if (_protrClickTimer) { clearTimeout(_protrClickTimer); _protrClickTimer = null; }
+                finishProtractorDraw();
+            });
+
+
+
+
+            // ---- Map Toolbar Panel ----
+            function setToolHint(msg) {
+                var el = document.getElementById('tb-hint');
+                if (el) el.textContent = msg;
+            }
+
+            document.getElementById('tb-zoom-in').onclick = function() { map.zoomIn(); };
+            document.getElementById('tb-zoom-out').onclick = function() { map.zoomOut(); };
+
+            document.getElementById('tb-toggle-chart').onclick = function() {
+                if (map.hasLayer(activeChartLayer)) {
+                    map.removeLayer(activeChartLayer);
+                    this.classList.remove('active');
+                } else {
+                    activeChartLayer.addTo(map);
+                    this.classList.add('active');
+                }
+            };
+
+document.getElementById('tb-protractor').onclick = function() {
+                if (!protractorDrawMode) {
+                    protractorDrawMode = true;
+                    var newId = crypto.randomUUID();
+                    currentProtractorId = newId;
+                    var protr = { myId: newId, points: [], segs: [] };
+                    protractors.push(protr);
+                    map.getContainer().style.cursor = 'crosshair';
+                    map.doubleClickZoom.disable();
+                    this.classList.add('active');
+                    setToolHint('Click map to place points. Dbl-click to finish.');
+                } else {
+                    finishProtractorDraw();
+                }
+            };
+
+            document.getElementById('tb-text').onclick = function() {
+                if (awaitingTextClick) {
+                    awaitingTextClick = false;
+                    map.getContainer().style.cursor = '';
+                    this.classList.remove('active');
+                    setToolHint('');
+                } else {
+                    awaitingTextClick = true;
+                    map.getContainer().style.cursor = 'text';
+                    this.classList.add('active');
+                    setToolHint('Click map to place a text label.');
+                }
+            };
+
+            document.getElementById('tb-save').onclick = function() { saveChart(); };
+
+            document.getElementById('mtb-toggle').onclick = function() {
+                var body = document.getElementById('mtb-body');
+                var collapsed = body.style.display === 'none';
+                body.style.display = collapsed ? '' : 'none';
+                this.textContent = collapsed ? '\u2212' : '+';
+            };
+            // ----------------------------------
+
+            // ✅ Your saveChart function
+            async function saveChart() {
+                const chartData = {
+                    infoChart: {
+                    markers: markers,
+                    words: textMarkers,
+                    plot: allPlot,
+                    protractors: protractors.map(function(p) {
+                        return {
+                            myId: p.myId,
+                            isTidalStream: p.isTidalStream || false,
+                            isCMG: p.isCMG || false,
+                            isCTS: p.isCTS || false,
+                            points: p.points.map(function(pt) { return { myId: pt.myId, lat: pt.lat, lng: pt.lng }; })
+                        };
+                    })
+                    },
+                    createdBy: userName,
+                    updatedBy: userName,
+                    ownerBy: userNameSelected
+                };
+
+                console.log(chartData)
+
+                try {
+                    const response = await fetch('/api/chart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(chartData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                    markClean();
+                    showToast(`Chart saved successfully (ID: ${result.id})`, "success");
+                    } else {
+                    showToast("Failed to save chart", "error");
+                    }
+                } catch (error) {
+                    showToast("Error saving chart", "error");
+                    console.error('❌ Error while calling /api/chart:', error);
+                }
+            }
+            
+            // ✅ Your retriew function
+            async function getChartByOwner(ownerBy) {
+                try {
+                    const response = await fetch(`/api/chart/${ownerBy}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        console.log('✅ Chart data:', result.chart);
+                        showToast(`Chart retrieved for ${ownerBy}`, "success");
+                        return result.chart;
+                    } else {
+                        // showToast(result.message || "Chart not found", "error");
+                    return null;
+                    }
+                } catch (error) {
+                    console.error('❌ Error fetching chart:', error);
+                    showToast("Error retrieving chart", "error");
+                    return null;
+                }
+            }
+
+
+            // ------------- ########### get fetch ########### ----------------------
+            fetch('/user_info')
+            .then(res => res.json())
+            .then(async (data) => {
+                if (data.success) {
+                    document.getElementById('user-name').textContent = data.name;
+                    document.getElementById('user-avatar').textContent = data.name ? data.name.charAt(0).toUpperCase() : '?';
+                    userNameSelected = data.name;
+                    userName = data.name;
+                    if (data.role === 'Admin') {
+                        document.getElementById('nav-userlist-link').style.display = '';
+                    }
+                    _isLoading = true;
+                    let infoChart = await getChartByOwner(userNameSelected);
+                    if (infoChart){
+                        infoChart = infoChart['infoChart']
+                        let words = infoChart['words']
+
+                        words.forEach(data => {
+                            makeText(data['latlng'], data['text'], data['myId'], data['rotationAngle'] || 0, data['textColor'] || '#000000', data['borderColor'] || '#808080', data['bgColor'] || 'transparent', data['anchorAbove'] || false)
+                        });
+
+                        // markers
+                        let markers = infoChart['markers']
+                        markers.forEach(data => {
+                            createMarker(data['latlng'],data["iconUrl"],data["id"], data["rotationAngle"], data["iconSize"] || [40,40])
+                        });
+
+                        let plots = infoChart['plot']
+
+                        polylineMeasure.seed(plots);
+
+                        (infoChart['protractors'] || []).forEach(function(data) {
+                            createProtractorFromData(data);
+                        });
+                    }
+                    _isLoading = false;
+                } else {
+                    document.getElementById('user-name').textContent = 'Guest';
+                    document.getElementById('user-avatar').textContent = 'G';
+                }
+            });
+
+            function logoutUser() {
+                window.location.href = '/logout';
+            }
+
+            function toggleUserDropdown(e) {
+                e.stopPropagation();
+                var badge = document.getElementById('user-badge');
+                var dropdown = document.getElementById('user-dropdown');
+                var isOpen = badge.classList.contains('open');
+                badge.classList.toggle('open', !isOpen);
+                dropdown.classList.toggle('open', !isOpen);
+            }
+
+            document.addEventListener('click', function() {
+                var badge = document.getElementById('user-badge');
+                var dropdown = document.getElementById('user-dropdown');
+                if (badge) badge.classList.remove('open');
+                if (dropdown) dropdown.classList.remove('open');
+            });
+            
+            function showToast(msg, type = 'danger') {
+                const toast = document.getElementById('toastMsg');
+                const toastText = document.getElementById('toastText');
+
+                // Remove any old background classes
+                toast.classList.remove('text-bg-danger', 'text-bg-success', 'text-bg-warning', 'text-bg-info');
+
+                // Add the selected type class
+                toast.classList.add(`text-bg-${type}`);
+
+                // Set the message and show toast
+                toastText.textContent = msg;
+                toast.style.display = 'block';
+
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+            }
+
+            function hideToast() {
+                document.getElementById('toastMsg').style.display = 'none';
+            }
+
+</script>
+    </body>
+</html>
